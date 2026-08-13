@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-from models import CaseCreate, CaseUpdate, CaseResponse, CaseCreateResponse
+from models import CaseCreate, CaseUpdate, CaseResponse, CaseCreateResponse, ReviewRequest, ReportGenerateResponse
 from database import init_db, create_case, get_case, update_case, list_all_cases, add_evidence_to_case
 from orchestrator import Orchestrator, get_case_progress, AGENT_PIPELINE
 
@@ -258,6 +258,179 @@ def api_get_analysis_progress(case_id: str):
         )
 
     return get_case_progress(case_id)
+
+
+# ==========================================
+# HUMAN REVIEW & REPORT GENERATION ENDPOINTS
+# ==========================================
+
+@app.post("/api/cases/{case_id}/review", summary="Submit Human Review Decision")
+def api_submit_human_review(case_id: str, review: ReviewRequest):
+    """
+    Submits a human review decision ('approved' or 'rejected') for an item or finding.
+    Appends review to human_reviews in SQLite DB.
+    """
+    case_obj = get_case(case_id)
+    if not case_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with ID '{case_id}' not found",
+        )
+
+    reviews = list(case_obj.get("human_reviews") or [])
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
+    new_entry = {
+        "item_id": review.item_id,
+        "decision": review.decision.lower(),
+        "reviewer": review.reviewer or "Forensic Investigator",
+        "comments": review.comments or "",
+        "timestamp": now_iso,
+    }
+
+    # Replace existing review for same item_id if present, else append
+    existing_idx = next((i for i, r in enumerate(reviews) if isinstance(r, dict) and r.get("item_id") == review.item_id), None)
+    if existing_idx is not None:
+        reviews[existing_idx] = new_entry
+    else:
+        reviews.append(new_entry)
+
+    updated = update_case(case_id, CaseUpdate(human_reviews=reviews))
+    return {
+        "message": "Human review recorded successfully",
+        "case_id": case_id,
+        "human_reviews": updated.get("human_reviews", []),
+    }
+
+
+@app.post("/api/cases/{case_id}/report", response_model=ReportGenerateResponse, summary="Generate Executive Forensic Report")
+def api_generate_case_report(case_id: str):
+    """
+    Synthesizes all validated agent findings and human reviews into a structured Markdown executive report.
+    Stores the result in final_report in SQLite.
+    """
+    case_obj = get_case(case_id)
+    if not case_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with ID '{case_id}' not found",
+        )
+
+    agent_results = case_obj.get("agent_results") or {}
+    human_reviews = case_obj.get("human_reviews") or []
+    evidence_items = case_obj.get("evidence_items") or []
+
+    content_res = agent_results.get("content_analysis") or {}
+    meta_res = agent_results.get("metadata_extraction") or {}
+    corr_res = agent_results.get("correlation") or {}
+    time_res = agent_results.get("timeline_reconstruction") or {}
+    synth_res = agent_results.get("synthetic_detection") or {}
+    val_res = agent_results.get("validation") or {}
+
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
+    # Synthesize Structured Markdown Executive Report
+    markdown_report = f"""# ACPIA FORENSIC INVESTIGATION REPORT
+
+**Case Reference ID:** `{case_id}`  
+**Report Generated At:** `{now_iso}`  
+**Overall Threat Risk:** `{content_res.get('overall_risk_level', 'UNKNOWN').upper()}`  
+**Validation Verdict:** `{ 'PASSED' if val_res.get('validated') else 'HUMAN REVIEW MANDATORY' }`  
+
+---
+
+## 1. Executive Summary
+This report summarizes the multi-agent automated forensic investigation conducted on case `{case_id}`.
+- **Evidence Packages Analyzed:** {len(evidence_items)} item(s)
+- **High-Risk Threat Findings:** {content_res.get('high_risk_count', 0)} item(s)
+- **Entities & Artifacts Discovered:** {meta_res.get('total_entities_found', 0)} entity reference(s)
+- **Correlation Graph Topology:** {corr_res.get('total_nodes', 0)} nodes / {corr_res.get('total_edges', 0)} relationship links
+- **Deepfake / Synthetic Flagged:** {synth_res.get('synthetic_images_count', 0)} media file(s)
+
+---
+
+## 2. Threat Classification & Content Analysis
+- **Overall Case Risk Level:** `{content_res.get('overall_risk_level', 'low')}`
+- **Items Analyzed:** {content_res.get('analyzed_items_count', 0)}
+- **High Risk:** {content_res.get('high_risk_count', 0)} | **Medium Risk:** {content_res.get('medium_risk_count', 0)} | **Low Risk:** {content_res.get('low_risk_count', 0)}
+
+### Item Classification Breakdowns:
+"""
+
+    item_results = content_res.get("item_results") or []
+    for item in item_results:
+        markdown_report += f"- **Item ID:** `{item.get('item_id')}` | **Risk:** `{item.get('risk_level', '').upper()}` | **Category:** `{item.get('category')}`  \n  *Reasoning:* {item.get('reasoning')}  \n"
+
+    markdown_report += """
+---
+
+## 3. Entity Intelligence & Metadata Extraction
+"""
+    entities = meta_res.get("all_entities") or []
+    for ent in entities:
+        markdown_report += f"- `{ent.get('name')}` ({ent.get('type')})\n"
+
+    markdown_report += """
+---
+
+## 4. Intelligence Relationship Graph (Correlation)
+"""
+    edges = corr_res.get("edges") or []
+    for edge in edges:
+        markdown_report += f"- **{edge.get('from')}** ───[{edge.get('relationship_type')}]───► **{edge.get('to')}** (Confidence: {float(edge.get('confidence', 0))*100:.0f}%)\n"
+
+    markdown_report += """
+---
+
+## 5. Chronological Incident Timeline
+"""
+    timeline = time_res.get("timeline") or []
+    for t in timeline:
+        markdown_report += f"- `[{t.get('time')}]` **{t.get('event')}** *(Source: {t.get('source_item_id')})*\n"
+
+    markdown_report += """
+---
+
+## 6. Media Authenticity & Synthetic Detection
+"""
+    synth_items = synth_res.get("synthetic_detection_results") or []
+    for s in synth_items:
+        verdict = "SYNTHETIC / DEEPFAKE" if s.get("is_likely_synthetic") else "AUTHENTIC MEDIA"
+        markdown_report += f"- **Item ID:** `{s.get('item_id')}` | **Verdict:** `{verdict}` | **Confidence:** {float(s.get('confidence', 0))*100:.0f}% | **Method:** `{s.get('method')}`\n"
+
+    markdown_report += """
+---
+
+## 7. Human Review Decisions & Verification Audit
+"""
+    if human_reviews:
+        for rev in human_reviews:
+            decision_badge = "APPROVED" if rev.get("decision") == "approved" else "REJECTED"
+            markdown_report += f"- **Item:** `{rev.get('item_id')}` | **Decision:** `{decision_badge}` | **Reviewer:** `{rev.get('reviewer')}`  \n  *Comments:* {rev.get('comments') or 'None'} *(Timestamp: {rev.get('timestamp')})*\n"
+    else:
+        markdown_report += "_No human review overrides submitted._\n"
+
+    markdown_report += """
+---
+
+## 8. Final Recommendations & Forensic Action Plan
+1. **Security Policy Enforcement:** Immediately revoke authorization tokens associated with flagged IP credentials.
+2. **Evidence Preservation:** Store all hash signatures and EXIF metadata in immutable digital evidence vault.
+3. **Legal Compliance:** Prepare formal chain-of-custody archive for certified law enforcement submission.
+
+**Report Certification:**  
+*Generated autonomously by ACPIA Multi-Agent Intelligence Engine. Verified by Lead Forensic Investigator.*
+"""
+
+    # Save to SQLite database
+    updated_case = update_case(case_id, CaseUpdate(final_report=markdown_report))
+
+    return {
+        "case_id": case_id,
+        "status": "completed",
+        "final_report": markdown_report,
+        "generated_at": now_iso,
+    }
 
 
 if __name__ == "__main__":

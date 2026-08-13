@@ -35,3 +35,17 @@ class CaseCreateResponse(BaseModel):
     case_id: str
     message: str
     case: CaseResponse
+
+
+class ReviewRequest(BaseModel):
+    item_id: str = Field(..., description="ID of the evidence item or finding being reviewed")
+    decision: str = Field(..., description="'approved' or 'rejected'")
+    reviewer: Optional[str] = Field(default="Forensic Investigator", description="Name/ID of reviewer")
+    comments: Optional[str] = Field(default="", description="Reviewer comments or rationale")
+
+
+class ReportGenerateResponse(BaseModel):
+    case_id: str
+    status: str
+    final_report: str
+    generated_at: str
