@@ -124,6 +124,14 @@ export default function Home() {
             <span>Upload Evidence</span>
           </Link>
 
+          <Link
+            href="/analysis"
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#234935] hover:bg-[#2D5941] text-[#97BC62] border border-[#97BC62]/40 font-bold text-xs transition-all"
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Run Pipeline</span>
+          </Link>
+
           {/* Status Badge */}
           <div
             className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
