@@ -11,6 +11,7 @@ from metadata_extraction import run_metadata_extraction
 from correlation import run_correlation
 from timeline_reconstruction import run_timeline_reconstruction
 from synthetic_detection import run_synthetic_detection
+from validation import run_validation
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("orchestrator")
@@ -65,14 +66,7 @@ class Orchestrator:
         elif step_name == "synthetic_detection":
             return await run_synthetic_detection(case_data)
         elif step_name == "validation":
-            return {
-                "status": "completed",
-                "overall_confidence": 0.95,
-                "integrity_check": "passed",
-                "rule_violations": [],
-                "ready_for_review": True,
-                "completed_at": now_iso,
-            }
+            return await run_validation(case_data)
         else:
             return {"status": "completed", "summary": f"Executed {step_name}", "completed_at": now_iso}
 
@@ -101,7 +95,8 @@ class Orchestrator:
             self._add_progress_event(step_name, "running", start_pct, f"Running step {step_num}/{total_steps}: {step_name}")
 
             try:
-                # Execute agent stub
+                # Pass accumulated agent_results to case_data so downstream agents can inspect prior findings
+                case_data["agent_results"] = agent_results
                 step_result = await self._run_agent_stub(step_name, case_data)
                 agent_results[step_name] = step_result
 
