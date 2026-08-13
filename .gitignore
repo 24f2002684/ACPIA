@@ -5,10 +5,12 @@ venv/
 ENV/
 env/
 
-# Databases
+# Databases & Uploads
 *.db
 *.sqlite
 *.sqlite3
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Next.js
 .next/

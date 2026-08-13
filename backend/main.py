@@ -1,20 +1,30 @@
 import os
+import json
+import uuid
 from datetime import datetime
-from typing import List, Optional
-from fastapi import FastAPI, HTTPException, status
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from models import CaseCreate, CaseUpdate, CaseResponse, CaseCreateResponse
-from database import init_db, create_case, get_case, update_case, list_all_cases
+from database import init_db, create_case, get_case, update_case, list_all_cases, add_evidence_to_case
 
 load_dotenv()
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+
 app = FastAPI(
     title="ACPIA API",
-    description="FastAPI Backend with SQLite persistence for ACPIA Application",
-    version="1.1.0",
+    description="FastAPI Backend with SQLite persistence & Evidence Upload for ACPIA",
+    version="1.2.0",
 )
+
+# Mount static uploads directory for serving uploaded files (images, logs, etc.)
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # Enable CORS for Next.js frontend communication
 app.add_middleware(
@@ -49,7 +59,7 @@ def get_root():
     """Returns API info and status."""
     return {
         "name": "ACPIA API Backend",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "status": "online",
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
@@ -112,6 +122,102 @@ def api_list_cases(limit: int = 50):
     Lists existing cases from SQLite database sorted by creation time descending.
     """
     return list_all_cases(limit=limit)
+
+
+# ==========================================
+# EVIDENCE UPLOAD ENDPOINT
+# ==========================================
+
+@app.post("/api/cases/{case_id}/evidence", status_code=status.HTTP_201_CREATED, summary="Upload Evidence to Case")
+async def api_upload_evidence(
+    case_id: str,
+    files: Optional[List[UploadFile]] = File(None),
+    chat_logs: Optional[str] = Form(None),
+):
+    """
+    Uploads evidence (images and/or mock chat log JSON) for a case.
+    Stores files in /backend/uploads/{case_id}/ and updates the database record.
+    """
+    # Ensure case exists; create it if missing
+    existing_case = get_case(case_id)
+    if not existing_case:
+        existing_case = create_case(CaseCreate(case_id=case_id, status="pending"))
+
+    case_upload_dir = os.path.join(UPLOADS_DIR, case_id)
+    os.makedirs(case_upload_dir, exist_ok=True)
+
+    added_items: List[Dict[str, Any]] = []
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
+    # 1. Process File Uploads (Images / Documents)
+    if files:
+        for file in files:
+            if not file.filename:
+                continue
+
+            # Save file to disk
+            safe_filename = os.path.basename(file.filename)
+            file_path = os.path.join(case_upload_dir, safe_filename)
+
+            content = await file.read()
+            with open(file_path, "wb") as f:
+                f.write(content)
+
+            file_size = len(content)
+            file_url = f"/uploads/{case_id}/{safe_filename}"
+
+            is_image = file.content_type and file.content_type.startswith("image")
+            item_type = "image" if is_image else "file"
+
+            added_items.append({
+                "id": f"ev_file_{uuid.uuid4().hex[:8]}",
+                "type": item_type,
+                "filename": safe_filename,
+                "url": file_url,
+                "size_bytes": file_size,
+                "mime_type": file.content_type or "application/octet-stream",
+                "uploaded_at": now_iso,
+            })
+
+    # 2. Process Chat Logs JSON Payload
+    if chat_logs and chat_logs.strip():
+        try:
+            chat_data = json.loads(chat_logs)
+            if isinstance(chat_data, dict) and "logs" in chat_data:
+                parsed_logs = chat_data["logs"]
+            elif isinstance(chat_data, list):
+                parsed_logs = chat_data
+            else:
+                parsed_logs = [chat_data]
+
+            added_items.append({
+                "id": f"ev_chat_{uuid.uuid4().hex[:8]}",
+                "type": "chat_log",
+                "count": len(parsed_logs),
+                "logs": parsed_logs,
+                "uploaded_at": now_iso,
+            })
+        except json.JSONDecodeError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid JSON payload in chat_logs field: {str(err)}",
+            )
+
+    if not added_items:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No valid files or chat logs provided in request",
+        )
+
+    updated_case = add_evidence_to_case(case_id, added_items)
+
+    return {
+        "message": "Evidence uploaded successfully",
+        "case_id": case_id,
+        "added_count": len(added_items),
+        "added_evidence": added_items,
+        "case": updated_case,
+    }
 
 
 if __name__ == "__main__":

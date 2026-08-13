@@ -139,3 +139,24 @@ def list_all_cases(limit: int = 50) -> List[Dict[str, Any]]:
         return [row_to_case_dict(r) for r in rows]
     finally:
         conn.close()
+
+
+def add_evidence_to_case(case_id: str, new_items: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Appends new evidence items to the existing evidence_items list for a case."""
+    existing = get_case(case_id)
+    if not existing:
+        return None
+
+    current_items = existing.get("evidence_items") or []
+    updated_evidence = current_items + new_items
+    evidence_json = json.dumps(updated_evidence)
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            conn.execute("UPDATE cases SET evidence_items = ? WHERE case_id = ?", (evidence_json, case_id))
+    finally:
+        conn.close()
+
+    return get_case(case_id)
+

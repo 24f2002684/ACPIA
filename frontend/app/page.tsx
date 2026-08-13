@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Activity, CheckCircle2, XCircle, RefreshCw, Server, ShieldCheck, Cpu, ArrowUpRight, Radio, Terminal } from "lucide-react";
+import Link from "next/link";
+import { Activity, CheckCircle2, XCircle, RefreshCw, Server, ShieldCheck, Cpu, ArrowUpRight, Radio, Terminal, Upload } from "lucide-react";
 
 interface HealthData {
   status: string;
@@ -115,6 +116,14 @@ export default function Home() {
         </div>
 
         <div className="flex items-center space-x-3">
+          <Link
+            href="/upload"
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#97BC62] hover:bg-[#A7CC72] text-[#132B1F] font-bold text-xs transition-all shadow-md shadow-[#97BC62]/20"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Upload Evidence</span>
+          </Link>
+
           {/* Status Badge */}
           <div
             className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
