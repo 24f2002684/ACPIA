@@ -3,13 +3,14 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from models import CaseCreate, CaseUpdate, CaseResponse, CaseCreateResponse
 from database import init_db, create_case, get_case, update_case, list_all_cases, add_evidence_to_case
+from orchestrator import Orchestrator, get_case_progress, AGENT_PIPELINE
 
 load_dotenv()
 
@@ -220,6 +221,46 @@ async def api_upload_evidence(
     }
 
 
+# ==========================================
+# ORCHESTRATOR PIPELINE ENDPOINTS
+# ==========================================
+
+@app.post("/api/cases/{case_id}/analyze", status_code=status.HTTP_202_ACCEPTED, summary="Trigger Agent Analysis Pipeline")
+async def api_trigger_analysis(case_id: str, background_tasks: BackgroundTasks):
+    """
+    Triggers the sequential 6-step agent analysis pipeline for a case in the background.
+    """
+    case_obj = get_case(case_id)
+    if not case_obj:
+        case_obj = create_case(CaseCreate(case_id=case_id, status="pending"))
+
+    orchestrator = Orchestrator(case_id)
+    background_tasks.add_task(orchestrator.run_pipeline)
+
+    return {
+        "message": "Analysis pipeline initiated",
+        "case_id": case_id,
+        "status": "analyzing",
+        "pipeline_steps": AGENT_PIPELINE,
+    }
+
+
+@app.get("/api/cases/{case_id}/progress", summary="Poll Agent Pipeline Progress")
+def api_get_analysis_progress(case_id: str):
+    """
+    Returns the current in-memory progress event history, completion percentage, and agent results for a case.
+    """
+    case_obj = get_case(case_id)
+    if not case_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with ID '{case_id}' not found",
+        )
+
+    return get_case_progress(case_id)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
