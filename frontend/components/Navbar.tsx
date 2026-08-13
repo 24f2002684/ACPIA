@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Cpu, Upload, Play, FileText, ToggleLeft, ToggleRight, Radio } from "lucide-react";
+import { ShieldCheck, Radio, ToggleLeft, ToggleRight } from "lucide-react";
 import { useToast } from "./ToastContext";
 
 export default function Navbar() {
@@ -65,18 +65,18 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="border-b border-[#97BC62]/20 bg-[#0D1F16]/90 backdrop-blur-md sticky top-0 z-50 print:hidden">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
+    <header className="border-b border-[#97BC62]/20 bg-[#1A3A2A]/90 backdrop-blur-md sticky top-0 z-50 print:hidden">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+        {/* Brand Logo with Shield Icon */}
         <div className="flex items-center space-x-3">
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-8 h-8 rounded-lg bg-[#97BC62] flex items-center justify-center font-bold text-[#1A3A2A] shadow-md shadow-[#97BC62]/20 group-hover:scale-105 transition-transform">
-              A
+            <div className="w-9 h-9 rounded-xl bg-[#97BC62] flex items-center justify-center font-bold text-[#1A3A2A] shadow-md shadow-[#97BC62]/20 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5 text-[#1A3A2A]" />
             </div>
             <div>
-              <span className="font-semibold tracking-wider text-[#97BC62] text-base">ACPIA</span>
-              <span className="text-[10px] text-emerald-300/60 ml-2 border-l border-emerald-500/30 pl-2 font-mono uppercase">
-                Forensics v1.3
+              <span className="font-bold tracking-wider text-[#97BC62] text-lg">ACPIA</span>
+              <span className="text-[10px] text-[#F0F5F0]/60 ml-2 border-l border-[#97BC62]/30 pl-2 font-mono uppercase">
+                AI Forensics Platform
               </span>
             </div>
           </Link>
@@ -90,10 +90,10 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-[#97BC62]/20 text-[#97BC62] border border-[#97BC62]/40"
-                    : "text-emerald-200/70 hover:text-white hover:bg-white/5"
+                    ? "bg-[#2C5F2D] text-[#97BC62] border border-[#97BC62]/40 shadow-sm"
+                    : "text-[#F0F5F0]/70 hover:text-white hover:bg-white/5"
                 }`}
               >
                 {link.label}
@@ -104,8 +104,8 @@ export default function Navbar() {
 
         {/* Presenter Live "Demo Mode: ON/OFF" Toggle Switch */}
         <div className="flex items-center space-x-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#11261C] border border-[#97BC62]/30 shadow-inner">
-            <Radio className={`w-3.5 h-3.5 ${demoMode ? "text-amber-400 animate-pulse" : "text-emerald-400"}`} />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2C5F2D]/60 border border-[#97BC62]/30 shadow-inner">
+            <Radio className={`w-3.5 h-3.5 ${demoMode ? "text-amber-400 animate-pulse" : "text-[#97BC62]"}`} />
             <span className="text-xs font-mono font-semibold text-white">
               Demo Mode: <span className={demoMode ? "text-amber-300" : "text-[#97BC62]"}>{demoMode ? "ON" : "OFF"}</span>
             </span>

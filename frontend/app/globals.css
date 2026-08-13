@@ -1,32 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --color-forest-bg: #1A3A2A;
-  --color-forest-card: #132B1F;
-  --color-forest-surface: #234935;
-  --color-forest-border: #2D5941;
-  --color-forest-text: #E6F0EA;
-  --color-forest-muted: #A3C2B0;
+  --color-forest-dark: #1A3A2A;
+  --color-forest-mid: #2C5F2D;
   --color-forest-accent: #97BC62;
-  --color-forest-accent-hover: #A7CC72;
-  --color-forest-accent-light: #C5E197;
-  --color-forest-accent-dark: #7A9E48;
+  --color-forest-light: #F0F5F0;
+  --color-forest-card: #1E4231;
+  --color-forest-border: #3B7A3E;
 }
 
 :root {
   --background: #1A3A2A;
-  --foreground: #E6F0EA;
+  --foreground: #F0F5F0;
   --accent: #97BC62;
 }
 
 body {
   background-color: #1A3A2A;
-  color: #E6F0EA;
+  color: #F0F5F0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+/* Pitch Deck Card Utility Style */
+.pitch-card {
+  background-color: rgba(44, 95, 45, 0.45);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(151, 188, 98, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border-radius: 1rem;
+}
+
+.pitch-card-hover {
+  transition: all 0.25s ease-in-out;
+}
+.pitch-card-hover:hover {
+  border-color: rgba(151, 188, 98, 0.5);
+  box-shadow: 0 12px 35px rgba(151, 188, 98, 0.2);
+  transform: translateY(-2px);
 }
 
 /* Subtle glowing pulse effect */

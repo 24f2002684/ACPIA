@@ -17,12 +17,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  RefreshCw,
-  Clock,
-  ShieldAlert,
-  Info
+  ShieldAlert
 } from "lucide-react";
-
+import PageTransition from "../../../../components/PageTransition";
 import KnowledgeGraphComponent from "./KnowledgeGraphComponent";
 
 export default function ResultsComponent() {
@@ -125,107 +122,72 @@ export default function ResultsComponent() {
   const contradictions = valRes.contradictions || [];
 
   return (
-    <div className="min-h-screen bg-[#1A3A2A] text-white selection:bg-[#97BC62] selection:text-[#1A3A2A] print:bg-white print:text-black">
-      {/* Header Bar */}
-      <header className="border-b border-[#97BC62]/20 bg-[#0D1F16]/80 backdrop-blur-md sticky top-0 z-50 print:hidden">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-[#97BC62] flex items-center justify-center font-bold text-[#1A3A2A] shadow-md">
-              A
-            </div>
-            <div>
-              <span className="font-semibold tracking-wider text-[#97BC62]">ACPIA</span>
-              <span className="text-xs text-emerald-300/60 ml-2 border-l border-emerald-500/30 pl-2">
-                Forensic Intelligence & Findings
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push(`/cases/${caseId}/analysis`)}
-              className="text-xs bg-[#11261C] border border-[#97BC62]/30 text-emerald-300 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-[#97BC62]/10 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Pipeline View
-            </button>
-            {reportText && (
-              <button
-                onClick={handlePrintReport}
-                className="text-xs bg-[#97BC62] text-[#1A3A2A] font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-[#85a854] transition-colors shadow-md shadow-[#97BC62]/20"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                Print Executive Report
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-6 py-10 print:p-0 print:max-w-full">
+    <PageTransition>
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 print:p-0 print:max-w-full">
         {loading ? (
-          <div className="p-16 text-center text-emerald-300/60 font-mono flex flex-col items-center gap-3">
+          <div className="p-16 text-center text-[#F0F5F0]/60 font-mono flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-[#97BC62]" />
             Loading forensic case findings...
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Top Bar / Title */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#97BC62]/20 border border-[#97BC62]/30 text-xs font-mono text-[#97BC62] mb-2">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Forensic Assessment Complete
+          <div className="space-y-6">
+            {/* Title Banner */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 pitch-card border-[#97BC62]/30 print:hidden">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#97BC62]/20 border border-[#97BC62]/40 flex items-center justify-center text-[#97BC62]">
+                  <ShieldCheck className="w-7 h-7" />
                 </div>
-                <h1 className="text-3xl font-bold">Case Forensic Dashboard</h1>
-                <p className="text-sm text-emerald-200/70 mt-1">
-                  Case ID: <span className="font-mono text-white font-bold">{caseId}</span>
-                </p>
+                <div>
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#97BC62]/20 text-[#97BC62] text-[11px] font-mono mb-1">
+                    Assessment & Intelligence Findings
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-[#F0F5F0]">Case Forensic Dashboard</h1>
+                  <p className="text-xs text-[#F0F5F0]/70 mt-0.5">
+                    Case ID: <span className="font-mono text-[#97BC62] font-bold">{caseId}</span>
+                  </p>
+                </div>
               </div>
 
-              <button
-                onClick={handleGenerateReport}
-                disabled={reportGenerating}
-                className="px-6 py-3 rounded-xl bg-[#97BC62] text-[#1A3A2A] font-bold text-sm flex items-center gap-2 hover:bg-[#85a854] transition-all shadow-lg shadow-[#97BC62]/20 active:scale-95 disabled:opacity-50"
-              >
-                {reportGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Generating Report...
-                  </>
-                ) : (
-                  <>
-                    <FileCheck className="w-4 h-4" />
-                    Generate Executive Report
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleGenerateReport}
+                  disabled={reportGenerating}
+                  className="px-5 py-2.5 rounded-xl bg-[#97BC62] text-[#1A3A2A] font-bold text-xs flex items-center gap-2 hover:bg-[#85a854] transition-all shadow-md shadow-[#97BC62]/20 active:scale-95 disabled:opacity-50"
+                >
+                  {reportGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Synthesizing...
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck className="w-4 h-4" />
+                      Generate Executive Report
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* 1. Risk Summary Card Banner */}
-            <div className="p-6 rounded-2xl bg-[#11261C] border border-[#97BC62]/30 shadow-xl grid grid-cols-1 md:grid-cols-4 gap-6 print:hidden">
-              {/* Overall Risk Card */}
-              <div className="p-4 rounded-xl bg-[#0D1F16] border border-white/5 flex items-center gap-4">
+            {/* Risk Summary Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 print:hidden">
+              <div className="p-4 pitch-card flex items-center gap-4">
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl ${
                     riskLevel === "HIGH"
                       ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                      : riskLevel === "MEDIUM"
-                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                       : "bg-[#97BC62]/20 text-[#97BC62] border border-[#97BC62]/30"
                   }`}
                 >
                   <ShieldAlert className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-emerald-300/60 uppercase font-mono tracking-wider">Overall Risk</div>
-                  <div className="text-xl font-bold text-white">{riskLevel}</div>
+                  <div className="text-[11px] text-[#F0F5F0]/60 uppercase font-mono tracking-wider">Overall Risk</div>
+                  <div className="text-lg font-bold text-white">{riskLevel}</div>
                 </div>
               </div>
 
-              {/* Validation Status Card */}
-              <div className="p-4 rounded-xl bg-[#0D1F16] border border-white/5 flex items-center gap-4">
+              <div className="p-4 pitch-card flex items-center gap-4">
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold ${
                     valRes.validated
@@ -236,55 +198,52 @@ export default function ResultsComponent() {
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-emerald-300/60 uppercase font-mono tracking-wider">Validation Verdict</div>
+                  <div className="text-[11px] text-[#F0F5F0]/60 uppercase font-mono tracking-wider">Validation Verdict</div>
                   <div className="text-sm font-bold text-white uppercase">
                     {valRes.validated ? "PASSED" : "HUMAN REVIEW"}
                   </div>
                 </div>
               </div>
 
-              {/* Entities Discovered Card */}
-              <div className="p-4 rounded-xl bg-[#0D1F16] border border-white/5 flex items-center gap-4">
+              <div className="p-4 pitch-card flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
                   <GitMerge className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-emerald-300/60 uppercase font-mono tracking-wider">Intelligence Graph</div>
-                  <div className="text-xl font-bold text-white">{corrRes.total_nodes || 0} Nodes / {corrRes.total_edges || 0} Edges</div>
+                  <div className="text-[11px] text-[#F0F5F0]/60 uppercase font-mono tracking-wider">Intelligence Graph</div>
+                  <div className="text-sm font-bold text-white">{corrRes.total_nodes || 0} Nodes / {corrRes.total_edges || 0} Edges</div>
                 </div>
               </div>
 
-              {/* Media Authenticity Card */}
-              <div className="p-4 rounded-xl bg-[#0D1F16] border border-white/5 flex items-center gap-4">
+              <div className="p-4 pitch-card flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-emerald-300/60 uppercase font-mono tracking-wider">Synthetic Detection</div>
-                  <div className="text-xl font-bold text-white">{synthRes.synthetic_images_count || 0} Flagged</div>
+                  <div className="text-[11px] text-[#F0F5F0]/60 uppercase font-mono tracking-wider">Synthetic Detection</div>
+                  <div className="text-sm font-bold text-white">{synthRes.synthetic_images_count || 0} Flagged</div>
                 </div>
               </div>
             </div>
 
-            {/* 2. Flagged Items Review Panel */}
-            <div className="p-6 rounded-2xl bg-[#11261C] border border-[#97BC62]/20 shadow-xl print:hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-white text-lg flex items-center gap-2">
+            {/* Human Review Panel */}
+            <div className="p-6 pitch-card space-y-4 print:hidden">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-white text-base flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-400" />
                   Mandatory Human Review Panel ({flagsForReview.length + contradictions.length})
                 </h3>
-                <span className="text-xs text-emerald-300/60">
-                  {humanReviews.length} decisions recorded
+                <span className="text-xs text-[#F0F5F0]/60 font-mono">
+                  {humanReviews.length} overrides recorded
                 </span>
               </div>
 
               {flagsForReview.length === 0 && contradictions.length === 0 ? (
-                <div className="p-4 rounded-xl bg-[#0D1F16] text-center text-xs text-emerald-300/60 font-mono">
-                  No automated flags or contradictions detected. Case meets confidence threshold (&gt;0.60).
+                <div className="p-4 rounded-xl bg-[#1A3A2A] text-center text-xs text-[#F0F5F0]/60 font-mono border border-white/5">
+                  No automated flags or contradictions detected. Case confidence threshold (&gt;0.60) satisfied.
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Low Confidence Flags */}
+                <div className="space-y-3">
                   {flagsForReview.map((flag: any, idx: number) => {
                     const itemId = flag.item_id;
                     const existingReview = humanReviews.find((r: any) => r.item_id === itemId);
@@ -292,7 +251,7 @@ export default function ResultsComponent() {
                     return (
                       <div
                         key={idx}
-                        className="p-4 rounded-xl bg-[#0D1F16] border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        className="p-4 rounded-xl bg-[#1A3A2A]/90 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4"
                       >
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -301,15 +260,9 @@ export default function ResultsComponent() {
                             </span>
                             <span className="font-mono font-bold text-xs text-white">{itemId}</span>
                           </div>
-                          <p className="text-xs text-emerald-200/80">{flag.reason}</p>
-                          {existingReview && (
-                            <div className="mt-2 text-[11px] font-mono text-emerald-400">
-                              Current Status: <span className="font-bold uppercase">{existingReview.decision}</span> by {existingReview.reviewer}
-                            </div>
-                          )}
+                          <p className="text-xs text-[#F0F5F0]/80">{flag.reason}</p>
                         </div>
 
-                        {/* Approve / Reject Actions */}
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleReviewDecision(itemId, "approved")}
@@ -320,14 +273,9 @@ export default function ResultsComponent() {
                                 : "bg-[#97BC62]/20 text-[#97BC62] border border-[#97BC62]/40 hover:bg-[#97BC62]/30"
                             }`}
                           >
-                            {reviewSubmitting === itemId ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <ThumbsUp className="w-3.5 h-3.5" />
-                            )}
+                            <ThumbsUp className="w-3.5 h-3.5" />
                             Approve
                           </button>
-
                           <button
                             onClick={() => handleReviewDecision(itemId, "rejected")}
                             disabled={reviewSubmitting === itemId}
@@ -337,35 +285,20 @@ export default function ResultsComponent() {
                                 : "bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30"
                             }`}
                           >
-                            {reviewSubmitting === itemId ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <ThumbsDown className="w-3.5 h-3.5" />
-                            )}
+                            <ThumbsDown className="w-3.5 h-3.5" />
                             Reject
                           </button>
                         </div>
                       </div>
                     );
                   })}
-
-                  {/* Contradiction Warnings */}
-                  {contradictions.map((contra: string, idx: number) => (
-                    <div key={idx} className="p-4 rounded-xl bg-red-950/30 border border-red-500/30 text-xs text-red-200">
-                      <div className="font-bold text-red-400 flex items-center gap-2 mb-1">
-                        <AlertTriangle className="w-4 h-4" />
-                        Cross-Agent Contradiction Warning
-                      </div>
-                      <p>{contra}</p>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
 
-            {/* 3. Interactive Knowledge Graph */}
-            <div className="p-6 rounded-2xl bg-[#11261C] border border-[#97BC62]/20 shadow-xl print:hidden">
-              <h3 className="font-bold text-white text-lg flex items-center gap-2 mb-4">
+            {/* Force Graph */}
+            <div className="p-6 pitch-card space-y-4 print:hidden">
+              <h3 className="font-bold text-white text-base flex items-center gap-2">
                 <GitMerge className="w-5 h-5 text-[#97BC62]" />
                 Interactive Correlation Knowledge Graph (react-force-graph)
               </h3>
@@ -376,18 +309,18 @@ export default function ResultsComponent() {
               />
             </div>
 
-            {/* 4. Timeline View */}
-            <div className="p-6 rounded-2xl bg-[#11261C] border border-[#97BC62]/20 shadow-xl print:hidden">
-              <h3 className="font-bold text-white text-lg flex items-center gap-2 mb-4">
+            {/* Timeline */}
+            <div className="p-6 pitch-card space-y-4 print:hidden">
+              <h3 className="font-bold text-white text-base flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-[#97BC62]" />
-                Chronological Event Timeline
+                Chronological Incident Timeline
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {(timeRes.timeline || []).map((t: any, idx: number) => (
-                  <div key={idx} className="p-3 rounded-xl bg-[#0D1F16] border border-white/5 flex items-start gap-3 text-xs">
+                  <div key={idx} className="p-3 rounded-xl bg-[#1A3A2A]/80 border border-white/5 flex items-start gap-3 text-xs">
                     <div className="font-mono text-[#97BC62] whitespace-nowrap">{t.time}</div>
-                    <div className="flex-1 text-emerald-200/90">{t.event}</div>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-emerald-400/60 font-mono text-[10px]">
+                    <div className="flex-1 text-[#F0F5F0]/90">{t.event}</div>
+                    <span className="px-2 py-0.5 rounded bg-white/5 text-[#97BC62] font-mono text-[10px]">
                       {t.source_item_id}
                     </span>
                   </div>
@@ -395,9 +328,9 @@ export default function ResultsComponent() {
               </div>
             </div>
 
-            {/* 5. Printable Executive Report Display */}
+            {/* Report Display */}
             {reportText && (
-              <div className="p-8 rounded-2xl bg-[#0D1F16] border border-[#97BC62]/30 shadow-2xl print:bg-white print:text-black print:p-0 print:border-none print:shadow-none">
+              <div className="p-8 pitch-card border-[#97BC62]/40 shadow-2xl print:bg-white print:text-black print:p-0 print:border-none print:shadow-none">
                 <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-6 print:hidden">
                   <div className="flex items-center gap-3">
                     <FileCheck className="w-6 h-6 text-[#97BC62]" />
@@ -412,8 +345,7 @@ export default function ResultsComponent() {
                   </button>
                 </div>
 
-                {/* Rendered Printable Markdown Document */}
-                <article className="prose prose-invert print:prose max-w-none text-emerald-100 text-sm leading-relaxed space-y-4 print:text-black">
+                <article className="prose prose-invert print:prose max-w-none text-[#F0F5F0] text-sm leading-relaxed space-y-4 print:text-black">
                   <ReactMarkdown>{reportText}</ReactMarkdown>
                 </article>
               </div>
@@ -421,6 +353,6 @@ export default function ResultsComponent() {
           </div>
         )}
       </main>
-    </div>
+    </PageTransition>
   );
 }
