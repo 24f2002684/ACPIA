@@ -7,6 +7,10 @@ from typing import Any, Dict, List, Optional
 from database import get_case, update_case
 from models import CaseUpdate
 from content_analysis import run_content_analysis
+from metadata_extraction import run_metadata_extraction
+from correlation import run_correlation
+from timeline_reconstruction import run_timeline_reconstruction
+from synthetic_detection import run_synthetic_detection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("orchestrator")
@@ -53,40 +57,13 @@ class Orchestrator:
         if step_name == "content_analysis":
             return await run_content_analysis(case_data)
         elif step_name == "metadata_extraction":
-            return {
-                "status": "completed",
-                "exif_metadata": {"device": "VirtualMachine", "os": "Linux", "camera_model": None},
-                "file_hashes": ["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],
-                "mime_types": ["image/png", "application/json"],
-                "completed_at": now_iso,
-            }
+            return await run_metadata_extraction(case_data)
         elif step_name == "correlation":
-            return {
-                "status": "completed",
-                "matched_incidents": ["INC-2026-8801", "INC-2026-9142"],
-                "similarity_score": 0.92,
-                "threat_actor_pattern": "Credential Stuffing Campaign",
-                "completed_at": now_iso,
-            }
+            return await run_correlation(case_data)
         elif step_name == "timeline_reconstruction":
-            return {
-                "status": "completed",
-                "timeline_events": [
-                    {"time": "2026-08-13T14:32:00Z", "event": "User reported suspicious authorization alert"},
-                    {"time": "2026-08-13T14:33:15Z", "event": "Support agent check initiated"},
-                    {"time": "2026-08-13T14:33:20Z", "event": "System logged failed login attempts from IP 192.168.1.105"},
-                ],
-                "completed_at": now_iso,
-            }
+            return await run_timeline_reconstruction(case_data)
         elif step_name == "synthetic_detection":
-            return {
-                "status": "completed",
-                "deepfake_score": 0.04,
-                "ai_generated_text_probability": 0.12,
-                "manipulation_flags": [],
-                "verdict": "authentic_media",
-                "completed_at": now_iso,
-            }
+            return await run_synthetic_detection(case_data)
         elif step_name == "validation":
             return {
                 "status": "completed",
