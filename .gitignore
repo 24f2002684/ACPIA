@@ -5,6 +5,11 @@ venv/
 ENV/
 env/
 
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Next.js
 .next/
 out/
