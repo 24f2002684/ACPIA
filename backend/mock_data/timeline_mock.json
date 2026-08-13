@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "demo_mode": true,
+  "event_count": 3,
+  "timeline": [
+    {
+      "time": "2026-08-13T14:32:00Z",
+      "event": "Observed event: Initial security alert triggered for suspicious authorization",
+      "source_item_id": "ev_demo_1"
+    },
+    {
+      "time": "2026-08-13T14:33:15Z",
+      "event": "Observed event: Support agent initiated account diagnostic protocol",
+      "source_item_id": "ev_demo_2"
+    },
+    {
+      "time": "2026-08-13T14:33:20Z",
+      "event": "Observed event: System registered multiple failed password attempts from IP 192.168.1.105",
+      "source_item_id": "ev_demo_3"
+    }
+  ]
+}

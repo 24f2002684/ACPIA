@@ -1,0 +1,28 @@
+{
+  "status": "completed",
+  "demo_mode": true,
+  "edges": [
+    {"from": "Suhail Akthar", "to": "+91 98765 43210", "relationship_type": "phone_owner", "confidence": 0.95},
+    {"from": "+91 98765 43210", "to": "192.168.1.105", "relationship_type": "linked_authentication", "confidence": 0.88},
+    {"from": "192.168.1.105", "to": "iPhone_14_Pro", "relationship_type": "device_network_connection", "confidence": 0.91}
+  ],
+  "graph": {
+    "directed": false,
+    "multigraph": false,
+    "graph": {},
+    "nodes": [
+      {"type": "person", "id": "Suhail Akthar"},
+      {"type": "phone_number", "id": "+91 98765 43210"},
+      {"type": "ip_address", "id": "192.168.1.105"},
+      {"type": "user_account", "id": "user_john"},
+      {"type": "device", "id": "iPhone_14_Pro"}
+    ],
+    "edges": [
+      {"relationship_type": "phone_owner", "confidence": 0.95, "source": "Suhail Akthar", "target": "+91 98765 43210"},
+      {"relationship_type": "linked_authentication", "confidence": 0.88, "source": "+91 98765 43210", "target": "192.168.1.105"},
+      {"relationship_type": "device_network_connection", "confidence": 0.91, "source": "192.168.1.105", "target": "iPhone_14_Pro"}
+    ]
+  },
+  "total_nodes": 5,
+  "total_edges": 3
+}

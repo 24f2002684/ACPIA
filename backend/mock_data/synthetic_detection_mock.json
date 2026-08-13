@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "demo_mode": true,
+  "analyzed_images_count": 1,
+  "synthetic_images_count": 0,
+  "synthetic_detection_results": [
+    {
+      "item_id": "ev_img_default_01",
+      "is_likely_synthetic": false,
+      "confidence": 0.96,
+      "method": "huggingface_deepfake_detector_demo",
+      "error": false
+    }
+  ]
+}

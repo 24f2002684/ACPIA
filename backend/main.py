@@ -2,8 +2,10 @@ import os
 import json
 import uuid
 from datetime import datetime
+import logging
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, status
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, BackgroundTasks, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -14,15 +16,37 @@ from orchestrator import Orchestrator, get_case_progress, AGENT_PIPELINE
 
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
+# Runtime config dictionary
+RUNTIME_CONFIG = {
+    "demo_mode": os.getenv("DEMO_MODE", "true").lower() in ("true", "1", "yes")
+}
+
 app = FastAPI(
     title="ACPIA API",
     description="FastAPI Backend with SQLite persistence & Evidence Upload for ACPIA",
-    version="1.2.0",
+    version="1.3.0",
 )
+
+# Global Exception Handler so no unhandled error returns raw 500 stack traces
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global unhandled exception on path '{request.url.path}': {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Internal Server Error",
+            "detail": str(exc),
+            "path": request.url.path,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        },
+    )
 
 # Mount static uploads directory for serving uploaded files (images, logs, etc.)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
@@ -52,7 +76,23 @@ def on_startup():
 @app.get("/api/health", summary="Health Check Endpoint")
 def get_health():
     """Returns the health status of the backend API."""
-    return {"status": "ok"}
+    return {"status": "ok", "demo_mode": RUNTIME_CONFIG["demo_mode"]}
+
+
+@app.get("/api/config/demo", summary="Get Live Demo Mode Config")
+def get_demo_config():
+    """Returns the current Demo Mode status."""
+    return {"demo_mode": RUNTIME_CONFIG["demo_mode"]}
+
+
+@app.post("/api/config/demo", summary="Toggle Live Demo Mode Config")
+def set_demo_config(payload: Dict[str, bool]):
+    """Sets the runtime Demo Mode status."""
+    if "demo_mode" in payload:
+        RUNTIME_CONFIG["demo_mode"] = bool(payload["demo_mode"])
+        os.environ["DEMO_MODE"] = "true" if RUNTIME_CONFIG["demo_mode"] else "false"
+        logger.info(f"Demo Mode updated to: {RUNTIME_CONFIG['demo_mode']}")
+    return {"message": "Demo mode updated", "demo_mode": RUNTIME_CONFIG["demo_mode"]}
 
 
 @app.get("/", summary="Root Endpoint")

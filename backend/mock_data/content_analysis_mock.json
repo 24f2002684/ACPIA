@@ -1,0 +1,28 @@
+{
+  "status": "completed",
+  "demo_mode": true,
+  "overall_risk_level": "high",
+  "analyzed_items_count": 2,
+  "high_risk_count": 1,
+  "medium_risk_count": 0,
+  "low_risk_count": 1,
+  "unknown_risk_count": 0,
+  "item_results": [
+    {
+      "item_id": "ev_chat_suspicious_99",
+      "risk_level": "high",
+      "category": "security_threat",
+      "confidence": 0.94,
+      "reasoning": "Chat transcript contains high-risk threat indicators and unauthorized authentication activity.",
+      "error": false
+    },
+    {
+      "item_id": "ev_img_benign_01",
+      "risk_level": "low",
+      "category": "system_screenshot",
+      "confidence": 0.96,
+      "reasoning": "SafeSearch scores indicate benign system interface screenshot (Adult: VERY_UNLIKELY, Violence: VERY_UNLIKELY).",
+      "error": false
+    }
+  ]
+}

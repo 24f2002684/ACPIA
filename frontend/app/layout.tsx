@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ToastProvider } from "../components/ToastContext";
+import Navbar from "../components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ACPIA | Full-Stack Control Panel",
-  description: "ACPIA FastAPI + Next.js full-stack system status dashboard",
+  title: "ACPIA | Multi-Agent AI Forensics System",
+  description: "ACPIA FastAPI + Next.js full-stack multi-agent forensic analysis platform",
 };
 
 export default function RootLayout({
@@ -25,7 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[#1A3A2A] text-[#E6F0EA] selection:bg-[#97BC62] selection:text-[#132B1F]" suppressHydrationWarning>
-        {children}
+        <ToastProvider>
+          <Navbar />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

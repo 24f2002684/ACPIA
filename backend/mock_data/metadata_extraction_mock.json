@@ -1,0 +1,38 @@
+{
+  "status": "completed",
+  "demo_mode": true,
+  "extracted_items_count": 2,
+  "total_entities_found": 5,
+  "extracted_items": [
+    {
+      "item_id": "ev_chat_suspicious_99",
+      "timestamp": "2026-08-13T14:32:00Z",
+      "device_id": "Auth_Gateway_Server_04",
+      "location": "192.168.1.105 (Internal Network)",
+      "entities": [
+        {"name": "Suhail Akthar", "type": "person"},
+        {"name": "+91 98765 43210", "type": "phone_number"},
+        {"name": "192.168.1.105", "type": "ip_address"},
+        {"name": "user_john", "type": "user_account"}
+      ],
+      "error": false
+    },
+    {
+      "item_id": "ev_img_benign_01",
+      "timestamp": "2026-08-13T14:33:00Z",
+      "device_id": "iPhone_14_Pro_EXIF",
+      "location": "Chennai, Tamil Nadu, IN",
+      "entities": [
+        {"name": "iPhone_14_Pro", "type": "device"}
+      ],
+      "error": false
+    }
+  ],
+  "all_entities": [
+    {"name": "Suhail Akthar", "type": "person"},
+    {"name": "+91 98765 43210", "type": "phone_number"},
+    {"name": "192.168.1.105", "type": "ip_address"},
+    {"name": "user_john", "type": "user_account"},
+    {"name": "iPhone_14_Pro", "type": "device"}
+  ]
+}
