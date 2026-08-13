@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from database import get_case, update_case
 from models import CaseUpdate
+from content_analysis import run_content_analysis
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("orchestrator")
@@ -50,13 +51,7 @@ class Orchestrator:
         now_iso = datetime.utcnow().isoformat() + "Z"
 
         if step_name == "content_analysis":
-            return {
-                "status": "completed",
-                "extracted_topics": ["authentication_failure", "unusual_ip_access", "privilege_escalation"],
-                "sentiment": "suspicious",
-                "key_entities": ["192.168.1.105", "user_john", "auth_service"],
-                "completed_at": now_iso,
-            }
+            return await run_content_analysis(case_data)
         elif step_name == "metadata_extraction":
             return {
                 "status": "completed",
