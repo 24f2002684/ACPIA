@@ -183,7 +183,8 @@ export default function EvidenceUploadPage() {
       setCaseData(responseData.case);
       setSelectedFiles([]);
       setChatLogJson("");
-      addToast("success", "Evidence Ingested", `Successfully uploaded ${responseData.added_count} evidence item(s).`);
+      setJsonError(null);
+      addToast("success", "Evidence Ingested", `Successfully uploaded ${responseData.added_count} evidence item(s). Draft cleared.`);
     } catch (err: any) {
       addToast("error", "Upload Failed", err.message);
     } finally {

@@ -61,7 +61,7 @@ export default function Navbar() {
     { href: "/", label: "Dashboard" },
     { href: "/upload", label: "Upload Evidence" },
     { href: "/analysis", label: "Analysis Pipeline" },
-    { href: "/results", label: "Case Results" },
+    { href: "/cases/case_demo_01/results", label: "Case Results" },
   ];
 
   return (

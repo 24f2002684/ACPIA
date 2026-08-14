@@ -147,7 +147,9 @@ def get_case_progress(case_id: str) -> Dict[str, Any]:
         "latest_step": latest_step,
         "latest_status": latest_status,
         "progress_pct": latest_pct,
+        "completion_percentage": latest_pct,
         "event_count": len(events),
         "events": events,
+        "history": events,
         "agent_results": case_data.get("agent_results") if case_data else {},
     }

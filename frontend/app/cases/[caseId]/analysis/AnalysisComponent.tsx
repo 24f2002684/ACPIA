@@ -1,23 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Play,
   CheckCircle2,
   Loader2,
   XCircle,
-  Clock,
   Shield,
   FileText,
   GitMerge,
   Calendar,
   Sparkles,
-  ShieldCheck,
-  ArrowRight,
-  RefreshCw,
-  AlertTriangle
+  ShieldCheck
 } from "lucide-react";
 import PageTransition from "../../../../components/PageTransition";
 
@@ -45,7 +41,6 @@ export default function AnalysisComponent() {
 
   const [analyzing, setAnalyzing] = useState<boolean>(false);
   const [progressPct, setProgressPct] = useState<number>(0);
-  const [currentStep, setCurrentStep] = useState<string | null>(null);
   const [stepStates, setStepStates] = useState<Record<string, "pending" | "running" | "completed" | "failed">>({
     content_analysis: "pending",
     metadata_extraction: "pending",
@@ -55,13 +50,79 @@ export default function AnalysisComponent() {
     validation: "pending",
   });
 
-  const [logs, setLogs] = useState<any[]>([]);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchProgress = useCallback(async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/cases/${caseId}/progress`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        const pct = Math.round(data.progress_pct ?? data.completion_percentage ?? 0);
+        setProgressPct(pct);
+
+        const history: any[] = data.events ?? data.history ?? [];
+        const agentResults: Record<string, any> = data.agent_results || {};
+
+        const nextStates: Record<string, "pending" | "running" | "completed" | "failed"> = {
+          content_analysis: "pending",
+          metadata_extraction: "pending",
+          correlation: "pending",
+          timeline_reconstruction: "pending",
+          synthetic_detection: "pending",
+          validation: "pending",
+        };
+
+        // Determine state per step from history & agent_results
+        AGENT_STEPS.forEach((step) => {
+          const stepRes = agentResults[step.id];
+          const hasCompletedEvent = history.some((h) => h.step === step.id && h.status === "completed");
+          const hasFailedEvent = history.some((h) => h.step === step.id && h.status === "failed");
+          const hasRunningEvent = history.some((h) => h.step === step.id && h.status === "running");
+
+          if (hasCompletedEvent || (stepRes && stepRes.status === "completed")) {
+            nextStates[step.id] = "completed";
+          } else if (hasFailedEvent || (stepRes && stepRes.error)) {
+            nextStates[step.id] = "failed";
+          } else if (hasRunningEvent) {
+            nextStates[step.id] = "running";
+          }
+        });
+
+        // Find active running step from latest history event
+        if (history.length > 0) {
+          const latestEvent = history[history.length - 1];
+          if (latestEvent && latestEvent.status === "running" && AGENT_STEPS.some((s) => s.id === latestEvent.step)) {
+            nextStates[latestEvent.step] = "running";
+          }
+        }
+
+        // If 100% complete, mark all steps completed
+        if (pct === 100) {
+          AGENT_STEPS.forEach((step) => {
+            if (nextStates[step.id] !== "failed") {
+              nextStates[step.id] = "completed";
+            }
+          });
+          setAnalyzing(false);
+        }
+
+        setStepStates(nextStates);
+
+        if (pct === 100) {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setTimeout(() => {
+            router.push(`/cases/${caseId}/results`);
+          }, 1500);
+        }
+      }
+    } catch (err) {
+      console.error("Polling progress error:", err);
+    }
+  }, [caseId, router]);
 
   const startAnalysis = async () => {
     setAnalyzing(true);
     setProgressPct(0);
-    setLogs([]);
     setStepStates({
       content_analysis: "running",
       metadata_extraction: "pending",
@@ -73,56 +134,20 @@ export default function AnalysisComponent() {
 
     try {
       await fetch(`http://127.0.0.1:8000/api/cases/${caseId}/analyze`, { method: "POST" });
+      setTimeout(fetchProgress, 300);
     } catch (err) {
       console.error("Failed to start analysis:", err);
     }
   };
 
   useEffect(() => {
-    pollingRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/cases/${caseId}/progress`, { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setProgressPct(data.completion_percentage || 0);
-          setLogs(data.history || []);
-
-          if (data.agent_results) {
-            const nextStates: any = {};
-            AGENT_STEPS.forEach((step) => {
-              const resObj = data.agent_results[step.id];
-              if (resObj) {
-                nextStates[step.id] = resObj.status || (resObj.error ? "failed" : "completed");
-              } else {
-                nextStates[step.id] = "pending";
-              }
-            });
-
-            const activeStep = data.history?.slice(-1)[0]?.step;
-            if (activeStep && nextStates[activeStep] !== "completed") {
-              nextStates[activeStep] = "running";
-              setCurrentStep(activeStep);
-            }
-
-            setStepStates(nextStates);
-
-            if (data.completion_percentage === 100) {
-              clearInterval(pollingRef.current!);
-              setTimeout(() => {
-                router.push(`/cases/${caseId}/results`);
-              }, 1200);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Polling progress error:", err);
-      }
-    }, 1500);
+    fetchProgress();
+    pollingRef.current = setInterval(fetchProgress, 1200);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [caseId, router]);
+  }, [fetchProgress]);
 
   return (
     <PageTransition>

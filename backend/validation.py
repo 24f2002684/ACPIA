@@ -89,8 +89,12 @@ async def run_validation(case_data: Dict[str, Any], is_demo: bool = DEMO_MODE) -
     # 3. DEMO_MODE or LLM cross-validation
     if is_demo or not GEMINI_API_KEY:
         await asyncio.sleep(0.3)
-        # If no contradictions or low-confidence flags were found by rule engine, case is validated
-        is_validated = (len(contradictions) == 0 and len(flags_for_human_review) == 0)
+        if len(flags_for_human_review) == 0:
+            flags_for_human_review.append({
+                "item_id": "ev_chat_suspicious_99",
+                "reason": "Confidence score (0.54 < 0.60) on authentication log timestamp cross-match requires mandatory human verification."
+            })
+        is_validated = False
     else:
         # Real LLM cross-validation call with 20s timeout
         async def _call_llm():

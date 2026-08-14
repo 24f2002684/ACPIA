@@ -1,9 +1,14 @@
 {
   "status": "completed",
   "demo_mode": true,
-  "validated": true,
-  "flags_for_human_review": [],
+  "validated": false,
+  "flags_for_human_review": [
+    {
+      "item_id": "ev_chat_suspicious_99",
+      "reason": "Confidence score (0.54 < 0.60) on authentication log timestamp cross-match requires mandatory human verification."
+    }
+  ],
   "contradictions": [],
-  "total_flags": 0,
+  "total_flags": 1,
   "total_contradictions": 0
 }
